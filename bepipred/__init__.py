@@ -30,7 +30,7 @@ This package contains protocols for creating and using ConPLex models for virtua
 """
 
 # General imports
-import os, subprocess, json
+import os, subprocess, json, pathlib
 
 # Scipion em imports
 import pwem
@@ -51,24 +51,20 @@ class Plugin(pwchemPlugin):
 
 	@classmethod
 	def _defineVariables(cls):
-		cls._defineEmVar(BEPIPRED_DIC['home'], cls.getBepiPredDir())
+		cls._defineVar(BEPIPRED_DIC['home'], cls.getBepiPredDir())
+		cls._defineVar(BEPIPRED_DIC['activation'], cls.getEnvActivationCommand(BEPIPRED_DIC))
+		cls._defineVar(BEPIPRED_DIC['zip'], None)
 
 	@classmethod
 	def defineBinaries(cls, env):
-		# todo: comprobar si esta ya instalado (requerimos definidos en el conf el comando de activacion, sea conda o python, y el home donde estan los scripts)
-		# todo: si no hay comando de activacion, pero si home, comprobamos si es la carpeta y si es asi hacemos la instalacion.
-		# todo: si no hay home definido ni se encuentra en el software em, no se instala nada (fallaria), ya se dirá que está mal instalado en el validateInstallation
 		"""This function defines the binaries for each package."""
-		if os.path.exists(cls.getVar(BEPIPRED_DIC['home'])):
-			if not cls.getVar(BEPIPRED_DIC['activation']):
-				cls._addBepiPredPackage(env, bepiHome=cls.getVar(BEPIPRED_DIC['home']))
-			else:
-				print('Environment activation command and HOME variable for BepiPred already found, instalaltion no needed')
-		elif os.path.exists(cls.getVar(BEPIPRED_DIC['zip'])):
+		if cls.checkVarPath('zip'):
 			cls._addBepiPredPackage(env, zipPath=cls.getVar(BEPIPRED_DIC['zip']))
-		else:
-			print()
-
+		elif cls.checkVarPath('home'):
+			if not cls.checkCallEnv(BEPIPRED_DIC):
+				cls._addBepiPredPackage(env, bepiHome=cls.getVar(BEPIPRED_DIC['home']))
+			# else:
+			# 	print('Environment activation command and HOME variables for BepiPred already found, installation no needed')
 
 	@classmethod
 	def _addBepiPredPackage(cls, env, bepiHome=None, zipPath=None, default=True):
@@ -78,40 +74,68 @@ class Plugin(pwchemPlugin):
 		installationCmd = ''
 		if not bepiHome and zipPath:
 			bepiHome = os.path.join(emConfig.EM_ROOT, cls.getEnvName(BEPIPRED_DIC))
-			installationCmd += f'unzip {zipPath} -d {bepiHome} && '
+			installationCmd += f'unzip -q {zipPath} -d {bepiHome} && ' \
+												 f'mv {bepiHome}/BepiPred3_src/* {bepiHome} && rm -r {bepiHome}/BepiPred3_src && '
 
 		installationCmd += f"cd {bepiHome} && sed -i 's/^torch==/#torch==/g' requirements.txt && "
 		installationCmd += f"conda create -y -n {cls.getEnvName(BEPIPRED_DIC)} " \
 											 f"python=3.9 --file requirements.txt && "
 		installationCmd += f"touch {BEPIPRED_INSTALLED}"
 
-		env.addPackage(BEPIPRED_DIC['name'], version=BEPIPRED_DIC['version'], tar=os.path.split(bepiHome)[-1],
-									 commands=[(installationCmd, os.path.join(bepiHome, BEPIPRED_INSTALLED))],
-									 neededProgs=["conda"], default=default, buildDir=bepiHome)
-
-		cls._defineEmVar(BEPIPRED_DIC['activation'], cls.getEnvActivationCommand(BEPIPRED_DIC))
+		env.addPackage(BEPIPRED_DIC['name'], version=BEPIPRED_DIC['version'],
+									 commands=[(installationCmd, os.path.join(bepiHome, BEPIPRED_INSTALLED))], tar='void.tgz',
+									 neededProgs=["conda"], default=default, buildDir=os.path.split(bepiHome)[-1])
 
 
 	@classmethod
 	def validateInstallation(cls):
-		""" Check if the installation of this protocol is correct.
-         Returning an empty list means that the installation is correct
-         and there are not errors. If some errors are found, a list with
-         the error messages will be returned.
-         """
-		missingPaths = []
-		if not os.path.exists(os.path.expanduser(cls.getVar(BEPIPRED_DIC['home']))):
-			missingPaths.append("Path of BepiPred does not exist (%s) : %s " % (BEPIPRED_DIC['home'],
-																																				 cls.getVar(BEPIPRED_DIC['home'])))
-		return missingPaths
+		""" Check if the installation of this protocol is correct. Returning an empty list means that the installation
+		is correct and there are not errors. If some errors are found, a list with the error messages will be returned."""
+		mPaths = []
+		if not cls.checkVarPath('home'):
+			mPaths.append(f"Path of BepiPred home (folder like BepiPred3_src) does not exist.\n"
+										f"You must either define it in the scipion.conf (as {BEPIPRED_DIC['home']} = <pathToBepiPred_src>) "
+										f"or define the location of the raw dowloaded ZIP file (like bepipred-3.0b.src.zip) as "
+										f"{BEPIPRED_DIC['zip']} = <pathToBepiPredZip>.\nAlternatively, you can move the home folder into "
+										f"{emConfig.EM_ROOT} keeping the '{bepiPattern}' pattern.")
+
+		if not cls.checkCallEnv(BEPIPRED_DIC):
+			mPaths.append(f"Activation of the BepiPred environment failed.\n")
+
+		if len(mPaths) > 0:
+			mPaths.append(NOINSTALL_WARNING)
+		return mPaths
 
 	@classmethod
 	def getBepiPredDir(cls, fn=""):
 		emDir = emConfig.EM_ROOT
 		for file in os.listdir(emDir):
-			if 'BepiPred' in file:
+			if bepiPattern in file.lower():
 				return os.path.join(emDir, file, fn)
-		print(f'BepiPred software could not be found in SOFTWARE directory ({emDir})')
+		# print(f'BepiPred software could not be found in SOFTWARE directory ({emDir})')
+		return os.path.join(emConfig.EM_ROOT, cls.getEnvName(BEPIPRED_DIC))
+
+	@classmethod
+	def checkVarPath(cls, var='home'):
+		'''Check if a plugin variable exists and so do its path'''
+		exists = False
+		varValue = cls.getVar(BEPIPRED_DIC[var])
+		if varValue and os.path.exists(varValue):
+			exists = True
+		return exists
+
+	@classmethod
+	def checkCallEnv(cls, packageDic):
+		actCommand = cls.getVar(packageDic['activation'])
+		try:
+			if 'conda' in actCommand and not 'shell.bash hook' in actCommand:
+				actCommand = f'{cls.getCondaActivationCmd()}{actCommand}'
+			subprocess.check_output(actCommand, shell=True)
+			envFine = True
+		except subprocess.CalledProcessError as e:
+			envFine = False
+		return envFine
+
 
 	# ---------------------------------- Protocol functions-----------------------
 	@classmethod

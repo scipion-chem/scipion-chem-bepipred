@@ -29,10 +29,13 @@
 DEFAULT_VERSION = '3.0'
 
 # Package dictionaries
-BEPIPRED_DIC =  {'name': 'BepiPred',    'version': '3.0',         'home': 'BEPIPRED_HOME',
-                 'zip': 'ZIP_PATH', 'activation': 'ACT_COMMAND'}
+BEPIPRED_DIC =  {'name': 'BepiPred',    'version': '3.0',
+                 'home': 'BEPIPRED_HOME', 'zip': 'BEPIPRED_ZIP', 'activation': 'BEPIPRED_ACTIVATION_CMD'}
 
-READ_URL = ''
+bepiPattern = 'bepipred'
 
-NOINSTALL_WARNING = 'Installation could not be completed because BepiPred download or instalaltion has not been found.\n' \
-                    'Please check the scipion-chem-bepipred README file to see more details about how to proceed with the installation.'
+READ_URL = 'https://github.com/scipion-chem/scipion-chem-bepipred'
+
+NOINSTALL_WARNING = f'Installation could not be completed because BepiPred download or installation has not been found.\n' \
+                    f'Please check the scipion-chem-bepipred README file to see more details about how to proceed with ' \
+                    f'the installation. You can find this instruction in {READ_URL}'

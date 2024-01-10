@@ -24,5 +24,5 @@
 # *
 # **************************************************************************
 
-from .protocol_bepipred_predict import ProtConPLexPrediction
+from .protocol_bepipred_predict import ProtBepiPredPrediction
 
