@@ -24,47 +24,49 @@
 # *
 # **************************************************************************
 
-from pyworkflow.tests import setupTestProject, DataSet
+from pyworkflow.tests import setupTestProject, DataSet, BaseTest
 
-# Scipion chem imports
-from pwchem.protocols import ProtChemImportSmallMolecules
-from pwchem.tests import TestImportSequences
+from pwem.protocols import ProtImportSequence
+
 from pwchem.utils import assertHandle
 
-from ..protocols import ProtConPLexPrediction
+from ..protocols import ProtBepiPredPrediction
 
-class TestConPLexPrediction(TestImportSequences):
+class TestBepiPredPrediction(BaseTest):
+	NAME = 'USER_SEQ'
+	DESCRIPTION = 'User description'
+	AMINOACIDSSEQ1 = 'MVLSPADKTNVKAAWGKVGAHAGEYGAEALERMFLSFPTTKTYFPHFDLSHGSAQVKGHG'
+
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
 		cls.ds = DataSet.getDataSet('model_building_tutorial')
-		cls.dsLig = DataSet.getDataSet("smallMolecules")
 		setupTestProject(cls)
 
-		cls._runImportSmallMols()
-		cls._runImportSeqs()
-		cls._waitOutput(cls.protImportSmallMols, 'outputSmallMolecules', sleepTime=5)
-		cls._waitOutput(cls.protImportSeqs, 'outputSequences', sleepTime=5)
+		cls._runImportSeq()
+		cls._waitOutput(cls.protImportSeq, 'outputSequences', sleepTime=5)
 
 	@classmethod
-	def _runImportSmallMols(cls):
-		cls.protImportSmallMols = cls.newProtocol(
-			ProtChemImportSmallMolecules,
-			filesPath=cls.dsLig.getFile('mol2'))
-		cls.proj.launchProtocol(cls.protImportSmallMols, wait=False)
+	def _runImportSeq(cls):
+		kwargs = {'inputSequenceName': cls.NAME,
+							'inputSequenceDescription': cls.DESCRIPTION,
+							'inputRawSequence': cls.AMINOACIDSSEQ1
+							}
 
-	def _runConPLexPrediction(self):
-		protConPLex = self.newProtocol(ProtConPLexPrediction)
+		cls.protImportSeq = cls.newProtocol(
+			ProtImportSequence, **kwargs)
+		cls.proj.launchProtocol(cls.protImportSeq, wait=False)
 
-		protConPLex.inputSequences.set(self.protImportSeqs)
-		protConPLex.inputSequences.setExtended('outputSequences')
-		protConPLex.inputSmallMols.set(self.protImportSmallMols)
-		protConPLex.inputSmallMols.setExtended('outputSmallMolecules')
+	def _runBepiPredPrediction(self):
+		protBepiPred = self.newProtocol(ProtBepiPredPrediction)
 
-		self.proj.launchProtocol(protConPLex, wait=False)
-		return protConPLex
+		protBepiPred.inputSequence.set(self.protImportSeq)
+		protBepiPred.inputSequence.setExtended('outputSequence')
+
+		self.proj.launchProtocol(protBepiPred, wait=False)
+		return protBepiPred
 
 	def test(self):
-		protConPLex = self._runConPLexPrediction()
-		self._waitOutput(protConPLex, 'outputSequences', sleepTime=10)
-		assertHandle(self.assertIsNotNone, getattr(protConPLex, 'outputSequences', None))
+		protBepiPred = self._runBepiPredPrediction()
+		self._waitOutput(protBepiPred, 'outputROIs', sleepTime=10)
+		assertHandle(self.assertIsNotNone, getattr(protBepiPred, 'outputROIs', None))

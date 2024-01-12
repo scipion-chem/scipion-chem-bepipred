@@ -24,4 +24,4 @@
 # *
 # **************************************************************************
 
-from bepipred.tests.test_conplex import *
+from bepipred.tests.test_bepipred import *

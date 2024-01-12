@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:	Carlos Oscar Sorzano (coss@cnb.csic.es)
-# *			 	Daniel Del Hoyo Gomez (ddelhoyo@cnb.csic.es)
+# * Authors:	Daniel Del Hoyo Gomez (ddelhoyo@cnb.csic.es)
+# *			 	Carlos Oscar Sorzano (coss@cnb.csic.es)
 # *			 	Martín Salinas Antón (martin.salinas@cnb.csic.es)
 # *
 # * Unidad de Bioinformatica of Centro Nacional de Biotecnologia, CSIC
@@ -139,10 +139,10 @@ class Plugin(pwchemPlugin):
 
 	# ---------------------------------- Protocol functions-----------------------
 	@classmethod
-	def runScript(cls, protocol, scriptName, args, envDict, cwd=None, popen=False):
+	def runBepiPred(cls, protocol, args, cwd=None, popen=False):
 		""" Run rdkit command from a given protocol. """
-		scriptName = cls.getScriptsDir(scriptName)
-		fullProgram = '%s && %s %s' % (cls.getEnvActivationCommand(envDict), 'python', scriptName)
+		bepiHome, bepiAct = cls.getVar(BEPIPRED_DIC["home"]), cls.getVar(BEPIPRED_DIC["activation"])
+		fullProgram = f'{bepiAct} && python {os.path.join(bepiHome, "bepipred3_CLI.py")}'
 		if not popen:
 			protocol.runJob(fullProgram, args, env=cls.getEnviron(), cwd=cwd)
 		else:
