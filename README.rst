@@ -15,9 +15,21 @@ Download BepiPred
 
 BepiPred is a software meant for academic use only. You can download BepiPred-3.0 in
 https://services.healthtech.dtu.dk/cgi-bin/sw_request?software=bepipred&version=3.0&packageversion=3.0b&platform=src.
-Once you obtain the software files (and once unzipped), Scipion will be able to find it either
-if you save it in the SOFTWARE directory (of the form scipion/software/em) or by defining *BEPIPRED_HOME*
-in the *scipion.conf* file.
+|
+Once you obtain the software file (a zip) you have several options to help Scipion finding it:
+
+1) Edit the scipion-conf file and add the variable: BEPIPRED_ZIP = <PathToBepiPredZip>
+This way, Scipion will unzip and move the corresponding files to the scipion/software/em folder and install BepiPred
+
+2) If you have unzipped BepiPred yourself you can either:
+2.1) Move the folder (of the form BepiPred3_src) to the scipion/software/em folder. Scipion will find it there.
+2.2) Specify the location of the BepiPred folder in the scipion.conf file as: BEPIPRED_HOME = <PathToBepiPred3_src>
+
+3) If you have already installed BepiPred (creating the python environment needed), you need to specify Scipion in the scipion.conf file both:
+a) The path to the BepiPred folder as: BEPIPRED_HOME = <PathToBepiPred3_src> and
+b) The activation command as: BEPIPRED_ACTIVATION_CMD = <ActivationCommand>
+This way, Scipion will use your own BepiPred installation.
+
 
 ===================
 Install this plugin
