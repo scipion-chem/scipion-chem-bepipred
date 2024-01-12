@@ -15,7 +15,9 @@ Download BepiPred
 
 BepiPred is a software meant for academic use only. You can download BepiPred-3.0 in
 https://services.healthtech.dtu.dk/cgi-bin/sw_request?software=bepipred&version=3.0&packageversion=3.0b&platform=src.
+
 |
+
 Once you obtain the software file (a zip) you have several options to help Scipion finding it:
 
 1) Edit the scipion-conf file and add the variable: BEPIPRED_ZIP = <PathToBepiPredZip>
