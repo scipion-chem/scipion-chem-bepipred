@@ -20,16 +20,16 @@ https://services.healthtech.dtu.dk/cgi-bin/sw_request?software=bepipred&version=
 
 Once you obtain the software file (a zip) you have several options to help Scipion finding it:
 
-1) Edit the scipion.conf file and add the variable: BEPIPRED_ZIP = <PathToBepiPredZip>.
+Option 1) Edit the scipion.conf file and add the variable: BEPIPRED_ZIP = <PathToBepiPredZip>.
 This way, Scipion will unzip and move the corresponding files to the scipion/software/em folder and install BepiPred.
 
-2) If you have unzipped BepiPred yourself you can either:
+Option 2) If you have unzipped BepiPred yourself you can either:
 
 2.1) Move the folder (of the form BepiPred3_src) to the scipion/software/em folder. Scipion will find it there.
 
 2.2) Specify the location of the BepiPred folder in the scipion.conf file as: BEPIPRED_HOME = <PathToBepiPred3_src>
 
-3) If you have already installed BepiPred (creating the python environment needed), you need to specify Scipion in the scipion.conf file both:
+Option 3) If you have already installed BepiPred (creating the python environment needed), you need to specify Scipion in the scipion.conf file both:
 
 3.a) The path to the BepiPred folder as: BEPIPRED_HOME = <PathToBepiPred3_src> and
 
