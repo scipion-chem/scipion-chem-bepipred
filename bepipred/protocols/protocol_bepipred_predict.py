@@ -35,7 +35,47 @@ from .. import Plugin as bepiPlugin
 from ..constants import BEPIPRED_DIC
 
 class ProtBepiPredPrediction(EMProtocol):
-  """Run a prediction using BepiPred to extract B-cell epitopes"""
+  """Run a prediction using BepiPred to extract B-cell epitopes
+  
+  User IA Manual: BepipredPredict Protocol
+
+The BepipredPredict protocol allows users to identify potential linear B-cell
+epitopes from protein sequences using the BepiPred algorithm. This prediction
+approach combines amino acid propensity scales and machine learning to assign
+a score to each residue, estimating its likelihood of being part of an
+antibody-accessible epitope.
+
+To run the protocol, the user must provide a protein sequence in FASTA format.
+This sequence should represent the antigen of interest and must be correctly
+formatted to ensure residue-level mapping. The prediction is applied across the
+entire sequence, and each position receives a numeric score reflecting its
+epitopic potential.
+
+The user can select which version of the BepiPred model to apply. Newer versions
+typically offer improved specificity and incorporate updated training data, while
+older versions may offer broader compatibility with legacy datasets. Once the
+model is selected, a threshold value can be configured. This threshold determines
+the minimum score required for a residue to be classified as part of a predicted
+epitope. Adjusting this threshold allows the user to balance sensitivity and
+specificity according to the intended application.
+
+The output consists of a prediction table listing each residue, its BepiPred
+score, and a binary classification based on the threshold. Optionally, the user
+can generate a graphical representation of the score profile along the sequence,
+highlighting regions with epitope potential. This visualization supports
+interactive analysis and comparison between candidate sequences.
+
+The annotated sequence can be passed to downstream Scipion-Chem protocols for
+further structural mapping, immunogenicity assessment, or population coverage
+analysis. All parameters and outputs are recorded for reproducibility, enabling
+integration into large-scale antigen screening or vaccine design workflows.
+
+In summary, the BepipredPredict protocol provides a reproducible and accessible
+method for predicting linear B-cell epitopes from protein sequence data. It helps
+identify antigenic regions for use in experimental design, immunological modeling,
+or peptide-based vaccine development.
+  
+  """
   _label = 'bepipred prediction'
 
   def __init__(self, **kwargs):
