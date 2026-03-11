@@ -36,46 +36,155 @@ from ..constants import BEPIPRED_DIC
 
 class ProtBepiPredPrediction(EMProtocol):
   """Run a prediction using BepiPred to extract B-cell epitopes
-  
-  User IA Manual: BepipredPredict Protocol
 
-The BepipredPredict protocol allows users to identify potential linear B-cell
-epitopes from protein sequences using the BepiPred algorithm. This prediction
-approach combines amino acid propensity scales and machine learning to assign
-a score to each residue, estimating its likelihood of being part of an
-antibody-accessible epitope.
+  AI Generated:
+        ProtBepiPredPrediction - User Manual
 
-To run the protocol, the user must provide a protein sequence in FASTA format.
-This sequence should represent the antigen of interest and must be correctly
-formatted to ensure residue-level mapping. The prediction is applied across the
-entire sequence, and each position receives a numeric score reflecting its
-epitopic potential.
+        Overview
+        --------
+        The ProtBepiPredPrediction protocol predicts B-cell epitopes within a
+        protein sequence using the BepiPred framework. B-cell epitopes are
+        regions of an antigen that are recognized by antibodies and therefore
+        play a crucial role in immune response, vaccine development, and
+        immunological research.
 
-The user can select which version of the BepiPred model to apply. Newer versions
-typically offer improved specificity and incorporate updated training data, while
-older versions may offer broader compatibility with legacy datasets. Once the
-model is selected, a threshold value can be configured. This threshold determines
-the minimum score required for a residue to be classified as part of a predicted
-epitope. Adjusting this threshold allows the user to balance sensitivity and
-specificity according to the intended application.
+        This protocol analyzes an input protein sequence and evaluates each
+        residue according to its predicted probability of belonging to an
+        epitope region. The predictions are generated using pretrained machine
+        learning models that combine sequence-based features with protein
+        embedding representations.
 
-The output consists of a prediction table listing each residue, its BepiPred
-score, and a binary classification based on the threshold. Optionally, the user
-can generate a graphical representation of the score profile along the sequence,
-highlighting regions with epitope potential. This visualization supports
-interactive analysis and comparison between candidate sequences.
+        Input Requirements
+        ------------------
+        - **Sequence**:
+            A protein sequence provided as a `Sequence` object. The sequence
+            should represent the antigen or protein of interest and must contain
+            valid amino acid residues.
 
-The annotated sequence can be passed to downstream Scipion-Chem protocols for
-further structural mapping, immunogenicity assessment, or population coverage
-analysis. All parameters and outputs are recorded for reproducibility, enabling
-integration into large-scale antigen screening or vaccine design workflows.
+        Parameters
+        ----------
+        - **Prediction type (predType)**:
+            Determines the BepiPred prediction model used:
+                • `mjv_pred`: Majority vote ensemble model.
+                • `vt_pred`: Variable threshold prediction based on ensemble
+                  probabilities.
 
-In summary, the BepipredPredict protocol provides a reproducible and accessible
-method for predicting linear B-cell epitopes from protein sequence data. It helps
-identify antigenic regions for use in experimental design, immunological modeling,
-or peptide-based vaccine development.
-  
-  """
+        - **Top proportion (top)**:
+            Defines the proportion of residues with the highest prediction
+            scores that will be considered epitope candidates.
+
+        - **Add sequence length (addSeqLen)**:
+            Adds sequence length information to the ESM-based encoding used by
+            the prediction model.
+
+        - **Extract linear epitopes (linearEp)**:
+            Enables smoothing of prediction scores using a rolling window to
+            identify contiguous epitope regions.
+
+        - **Rolling window size (rWindow)**:
+            Window size used to compute the rolling average of epitope
+            probabilities when extracting linear epitopes.
+
+        Epitope Extraction Parameters
+        -----------------------------
+        - **Average threshold (avThres)**:
+            Minimum prediction score required for a residue to be considered
+            epitope-positive.
+
+        - **Soft threshold (useSoft)**:
+            Allows inclusion of residues with slightly lower scores when they
+            occur between positive residues within an epitope region.
+
+        - **Soft threshold value (softThres)**:
+            Defines the tolerance range for residues included by the soft
+            threshold.
+
+        - **Soft threshold size (nSoft)**:
+            Maximum number of consecutive residues that can be included using
+            the soft threshold rule.
+
+        Epitope Size Constraints
+        ------------------------
+        - **Set epitope size limits (setSize)**:
+            Enables filtering of predicted epitopes by length.
+
+        - **Minimum epitope size (minSize)**:
+            Minimum number of residues allowed in a predicted epitope.
+
+        - **Maximum epitope size (maxSize)**:
+            Maximum number of residues allowed in a predicted epitope.
+
+        Workflow
+        --------
+        1. **Input preparation**
+           - The protein sequence is exported to FASTA format.
+
+        2. **BepiPred prediction**
+           - The sequence is analyzed using the selected BepiPred model.
+           - Residue-level epitope probability scores are generated.
+
+        3. **Score processing**
+           - Prediction scores are optionally smoothed using a rolling window.
+           - Residues exceeding the threshold are grouped into candidate
+             epitopes.
+
+        4. **Epitope extraction**
+           - Consecutive residues forming epitope segments are identified.
+           - Soft threshold rules may include borderline residues.
+           - Size constraints are applied if specified.
+
+        5. **Output generation**
+           - Each predicted epitope is converted into a `SequenceROI`
+             representing a region of interest within the protein sequence.
+
+        Outputs
+        -------
+        - **SetOfSequenceROIs**:
+            A collection of predicted epitope regions associated with the input
+            protein sequence. Each region contains:
+                • Epitope sequence
+                • Start and end positions in the protein
+                • Annotation describing the predicted B-cell epitope
+
+        - **Raw prediction files**:
+            Intermediate CSV files containing residue-level prediction scores.
+
+        Interpretation
+        --------------
+        - High prediction scores indicate residues more likely to belong to
+          antibody-recognized regions.
+        - Extracted epitopes represent contiguous segments with strong
+          epitope probability signals.
+        - Adjusting thresholds and smoothing parameters allows users to
+          control sensitivity versus specificity of predictions.
+
+        Practical Recommendations
+        -------------------------
+        - Use complete antigen sequences for best results.
+        - Adjust threshold parameters depending on the desired number of
+          predicted epitopes.
+        - Enable linear epitope extraction when identifying contiguous
+          antibody-binding segments.
+
+        Warnings
+        --------
+        - Predictions are computational estimates and should be validated
+          experimentally when possible.
+        - Prediction accuracy may vary depending on protein structure and
+          antigen context.
+        - Extremely short or disordered sequences may produce less reliable
+          results.
+
+        Final Perspective
+        -----------------
+        ProtBepiPredPrediction provides an automated approach to identify
+        potential B-cell epitopes directly from protein sequences. By combining
+        machine learning predictions with flexible epitope extraction
+        parameters, the protocol enables efficient screening of antigenic
+        regions for vaccine design, antibody development, and immunological
+        studies.
+
+    """
   _label = 'bepipred prediction'
 
   def __init__(self, **kwargs):
